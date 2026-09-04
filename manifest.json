@@ -2,7 +2,7 @@
   "name": "IELTS Workbench · 雅思工作台",
   "short_name": "雅思工作台",
   "description": "IELTS 6 周冲刺工作台：倒计时、每日计划、四科追踪、口语官、词汇本",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#FDFBF7",
   "theme_color": "#B85C38",
