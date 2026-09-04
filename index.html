@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#B85C38">
+  <title>IELTS Workbench · 雅思工作台</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23B85C38'/%3E%3Ctext x='50' y='62' font-size='36' text-anchor='middle' fill='white' font-family='Georgia'%3EI%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Lora:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">IELTS</span>
+        <div>
+          <h1>Workbench</h1>
+          <p class="brand-tag">雅思冲刺工作台</p>
+        </div>
+      </div>
+      <div class="actions">
+        <span id="saveStatus" class="save-status">已自动保存</span>
+        <button class="btn btn-ghost" id="btnImport">导入</button>
+        <button class="btn btn-ghost" id="btnExport">导出</button>
+        <button class="btn btn-primary" id="btnSave">保存</button>
+        <input type="file" id="fileInput" accept=".json" hidden>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="dashboard">今日</button>
+      <button class="tab" data-tab="sections">四科</button>
+      <button class="tab" data-tab="speaking">口语官</button>
+      <button class="tab" data-tab="vocab">词汇</button>
+      <button class="tab" data-tab="plan">计划</button>
+    </nav>
+
+    <main class="main">
+      <!-- 今日 -->
+      <section class="tab-panel active" id="panel-dashboard">
+        <div class="countdown" id="countdownBox">
+          <div class="countdown-main">
+            <span class="countdown-days" id="countdownDays">--</span>
+            <span class="countdown-label">距离考试还有</span>
+          </div>
+          <div class="countdown-meta">
+            <span id="examDateDisplay">未设置考试日期</span>
+            <button class="btn btn-ghost btn-small" id="btnSetExam">设置</button>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="panel today-panel">
+            <div class="panel-header">
+              <h2>今日任务</h2>
+              <p class="panel-sub" id="todayDate">--</p>
+            </div>
+            <ul class="task-list" id="todayTasks"></ul>
+            <button class="btn btn-ghost btn-small" id="btnRegenerateToday" style="margin-top:12px">重新生成今日任务</button>
+          </div>
+
+          <div class="panel stats-panel">
+            <div class="panel-header">
+              <h2>本周概览</h2>
+              <p class="panel-sub">近 7 天投入</p>
+            </div>
+            <div class="week-chart" id="weekChart"></div>
+            <div class="week-summary" id="weekSummary"></div>
+          </div>
+        </div>
+
+        <div class="overview" style="margin-top:24px">
+          <div class="stat-card">
+            <span class="stat-label">学习天数</span>
+            <span class="stat-value" id="statDays">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">累计学时</span>
+            <span class="stat-value" id="statHours">0</span>
+            <span class="stat-unit">h</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">预估均分</span>
+            <span class="stat-value" id="statBand">0.0</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">词汇收录</span>
+            <span class="stat-value" id="statWords">0</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 四科 -->
+      <section class="tab-panel" id="panel-sections">
+        <section class="sections-grid" id="sectionsGrid"></section>
+        <div class="lower-grid">
+          <section class="panel timer-panel">
+            <div class="panel-header">
+              <h2>专注计时</h2>
+              <p class="panel-sub">Study Timer</p>
+            </div>
+            <div class="timer-display" id="timerDisplay">00:00</div>
+            <div class="timer-controls">
+              <button class="btn btn-primary" id="btnTimerStart">开始</button>
+              <button class="btn btn-ghost" id="btnTimerPause">暂停</button>
+              <button class="btn btn-ghost" id="btnTimerReset">重置</button>
+            </div>
+            <p class="timer-note">计时结束后手动添加到对应模块。</p>
+          </section>
+          <section class="panel recent-panel">
+            <div class="panel-header">
+              <h2>最近记录</h2>
+              <p class="panel-sub">Recent Sessions</p>
+            </div>
+            <ul class="session-list" id="recentSessions"></ul>
+          </section>
+        </div>
+      </section>
+
+      <!-- 口语官 -->
+      <section class="tab-panel" id="panel-speaking">
+        <div class="speaking-header">
+          <div class="panel-header">
+            <h2>口语官</h2>
+            <p class="panel-sub">Speaking Officer · 内置题库 + 反馈记录</p>
+          </div>
+          <div class="speaking-filters">
+            <select id="speakingPartFilter">
+              <option value="all">全部 Part</option>
+              <option value="1">Part 1</option>
+              <option value="2">Part 2</option>
+              <option value="3">Part 3</option>
+            </select>
+            <select id="speakingTopicFilter">
+              <option value="all">全部话题</option>
+            </select>
+            <button class="btn btn-primary btn-small" id="btnRandomQuestion">随机一题</button>
+          </div>
+        </div>
+        <div class="question-card" id="questionCard">
+          <div class="question-meta">
+            <span class="question-part" id="questionPart">--</span>
+            <span class="question-topic" id="questionTopic">--</span>
+          </div>
+          <p class="question-text" id="questionText">选择上方筛选条件或点击“随机一题”开始练习。</p>
+          <button class="btn btn-primary" id="btnStartPractice" disabled>开始练习</button>
+        </div>
+        <div class="speaking-records">
+          <div class="panel-header">
+            <h3>练习记录</h3>
+            <p class="panel-sub">已练 <span id="speakingCount">0</span> 题</p>
+          </div>
+          <ul class="record-list" id="speakingRecords"></ul>
+        </div>
+      </section>
+
+      <!-- 词汇 -->
+      <section class="tab-panel" id="panel-vocab">
+        <div class="panel vocab-panel" style="max-width: 720px">
+          <div class="panel-header">
+            <h2>词汇本</h2>
+            <p class="panel-sub">Vocabulary</p>
+          </div>
+          <form class="vocab-form" id="vocabForm">
+            <input type="text" id="vocabWord" placeholder="单词" required>
+            <input type="text" id="vocabMeaning" placeholder="释义" required>
+            <button class="btn btn-primary" type="submit">添加</button>
+          </form>
+          <ul class="vocab-list" id="vocabList"></ul>
+        </div>
+      </section>
+
+      <!-- 计划 -->
+      <section class="tab-panel" id="panel-plan">
+        <div class="plan-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <h2>考试设置</h2>
+              <p class="panel-sub">Exam Settings</p>
+            </div>
+            <form class="plan-form" id="examForm">
+              <label>
+                <span>考试日期</span>
+                <input type="date" id="inputExamDate" required>
+              </label>
+              <label>
+                <span>目标总分</span>
+                <input type="number" id="inputTargetOverall" min="0" max="9" step="0.5" value="7.5">
+              </label>
+              <div class="target-bands">
+                <label><span>听力</span><input type="number" id="inputTargetListening" min="0" max="9" step="0.5" value="7.5"></label>
+                <label><span>阅读</span><input type="number" id="inputTargetReading" min="0" max="9" step="0.5" value="7.5"></label>
+                <label><span>写作</span><input type="number" id="inputTargetWriting" min="0" max="9" step="0.5" value="6.5"></label>
+                <label><span>口语</span><input type="number" id="inputTargetSpeaking" min="0" max="9" step="0.5" value="6.5"></label>
+              </div>
+              <button class="btn btn-primary" type="submit">保存目标</button>
+            </form>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h2>每周时间</h2>
+              <p class="panel-sub">Weekly Hours</p>
+            </div>
+            <form class="plan-form" id="weekForm">
+              <label>
+                <span>工作日每天（小时）</span>
+                <input type="number" id="inputWeekdayHours" min="0" max="12" step="0.5" value="4">
+              </label>
+              <label>
+                <span>周末每天（小时）</span>
+                <input type="number" id="inputWeekendHours" min="0" max="12" step="0.5" value="6.5">
+              </label>
+              <button class="btn btn-primary" type="submit">更新计划</button>
+            </form>
+            <p class="plan-note">系统会按四科均分生成每日建议任务，未完成任务顺延。</p>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:20px">
+          <div class="panel-header">
+            <h2>本周计划</h2>
+            <p class="panel-sub">Weekly Plan</p>
+          </div>
+          <div class="week-plan" id="weekPlan"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>数据仅保存在浏览器本地，定期导出可避免丢失。</p>
+    </footer>
+  </div>
+
+  <!-- 添加练习记录弹窗 -->
+  <dialog class="modal" id="sessionModal">
+    <form class="modal-form" id="sessionForm" method="dialog">
+      <div class="modal-header">
+        <h3 id="sessionModalTitle">添加练习</h3>
+        <button class="modal-close" type="button" id="btnCloseModal">×</button>
+      </div>
+      <div class="modal-body">
+        <label>
+          <span>日期</span>
+          <input type="date" id="sessionDate" required>
+        </label>
+        <label>
+          <span>分数 / Band</span>
+          <input type="number" id="sessionScore" min="0" max="9" step="0.5" placeholder="例如 7.0">
+        </label>
+        <label>
+          <span>时长（分钟）</span>
+          <input type="number" id="sessionDuration" min="1" value="30" required>
+        </label>
+        <label>
+          <span>备注</span>
+          <textarea id="sessionNote" rows="3" placeholder="今天练了什么？"></textarea>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" type="button" id="btnCancelModal">取消</button>
+        <button class="btn btn-primary" type="submit">保存记录</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 口语练习记录弹窗 -->
+  <dialog class="modal" id="speakingModal">
+    <form class="modal-form" id="speakingForm" method="dialog">
+      <div class="modal-header">
+        <h3>记录练习</h3>
+        <button class="modal-close" type="button" id="btnCloseSpeakingModal">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-question" id="speakingModalQuestion"></p>
+        <label>
+          <span>AI 反馈 / 改进点（粘贴外部 AI 的分析）</span>
+          <textarea id="speakingFeedback" rows="4" placeholder="例如：时态错误较多，建议多用连接词..." required></textarea>
+        </label>
+        <label>
+          <span>自评分数</span>
+          <input type="number" id="speakingScore" min="0" max="9" step="0.5" placeholder="例如 6.5">
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" type="button" id="btnCancelSpeakingModal">取消</button>
+        <button class="btn btn-primary" type="submit">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 设置考试日期弹窗 -->
+  <dialog class="modal" id="examDateModal">
+    <form class="modal-form" id="examDateForm" method="dialog">
+      <div class="modal-header">
+        <h3>设置考试日期</h3>
+        <button class="modal-close" type="button" id="btnCloseExamDateModal">×</button>
+      </div>
+      <div class="modal-body">
+        <label>
+          <span>日期</span>
+          <input type="date" id="quickExamDate" required>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" type="submit">确定</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
